@@ -186,6 +186,8 @@ input.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(56,
 .vs-up { color: var(--accent); }
 .vs-down { color: var(--warn); }
 .empty { color: var(--muted); text-align: center; padding: 30px 10px; }
+.error-box { background: var(--panel); border: 1px solid var(--err); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 8px; }
+.error-box pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 12.5px; color: var(--err); }
 
 /* Bottom sheet */
 .backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); z-index: 9; }
@@ -277,6 +279,12 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
       </div>
       <ul id="list" class="cards"></ul>
       <p id="empty" class="empty" hidden>Teraz nic nie leci nad Tobą. Spróbuj zwiększyć promień suwakiem.</p>
+      <div id="errorBox" class="error-box" hidden>
+        <b>Nie udało się pobrać danych</b>
+        <pre id="errorDetails"></pre>
+        <p class="muted small">Podgląd w aplikacji Claude albo plik otwarty z dysku może nie mieć dostępu do sieci.
+          Otwórz stronę z GitHub Pages. Aplikacja ponawia próbę co 5 s. Dane demo zobaczysz po dopisaniu <code>?demo</code> do adresu.</p>
+      </div>
     </section>
   </main>
 
@@ -448,19 +456,26 @@ async function fetchJSON(url, timeoutMs = 8000) {
   }
 }
 
+function describeError(e) {
+  if (e.name === 'AbortError') return 'brak odpowiedzi w ciągu 8 s';
+  // fetch() rejects with a bare TypeError for offline, DNS failure and CORS blocks alike.
+  if (e instanceof TypeError) return navigator.onLine ? 'zapytanie zablokowane (CORS lub sieć)' : 'brak internetu';
+  return e.message;
+}
+
 async function fetchAircraft() {
   if (DEMO) return demoAircraft();
   const { lat, lon, radiusKm, source } = state.settings;
   const nm = Math.ceil(radiusKm / 1.852);
   const order = [source, ...Object.keys(SOURCES).filter((k) => k !== source)];
-  let lastErr;
+  const errors = [];
   for (const key of order) {
     try {
       const data = await fetchJSON(SOURCES[key](lat.toFixed(4), lon.toFixed(4), nm));
       return { list: data.ac || [], source: key };
-    } catch (e) { lastErr = e; }
+    } catch (e) { errors.push(`${key}: ${describeError(e)}`); }
   }
-  throw lastErr;
+  throw new Error(errors.join('\n'));
 }
 
 async function lookupRoute(callsign) {
@@ -493,10 +508,13 @@ async function tick() {
     applyRadius();
     updateTrails();
     state.lastOk = Date.now();
+    $('#errorBox').hidden = true;
     setStatus('live', DEMO ? 'Tryb demo' : `Na żywo · ${source}`);
     state.aircraft.forEach((a) => lookupRoute(a.callsign));
   } catch (e) {
-    setStatus(state.lastOk ? 'warn' : 'err', state.lastOk ? 'Problem z połączeniem – ponawiam…' : 'Brak danych – sprawdź połączenie');
+    setStatus(state.lastOk ? 'warn' : 'err', state.lastOk ? 'Problem z połączeniem – ponawiam…' : 'Brak danych – szczegóły pod listą');
+    $('#errorDetails').textContent = `${new Date().toLocaleTimeString('pl-PL')} · ${location.origin}\n${e.message}`;
+    $('#errorBox').hidden = !!state.lastOk;
     console.warn('fetch failed', e);
   }
   render();
