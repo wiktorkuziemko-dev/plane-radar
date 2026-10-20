@@ -22,6 +22,7 @@
   --warn: #f5b84a;
   --err: #f0616d;
   --radius: 16px;
+  --maxw: 1240px;
   color-scheme: dark;
 }
 
@@ -45,11 +46,13 @@ h2 { font-size: 16px; }
 
 /* Top bar */
 .topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px;
   position: sticky; top: 0; z-index: 5;
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(10px);
+}
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  max-width: var(--maxw); margin: 0 auto; padding: 12px 16px;
 }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .brand p { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -61,11 +64,53 @@ h2 { font-size: 16px; }
 .icon-btn svg { width: 22px; height: 22px; fill: var(--muted); }
 
 /* Layout */
-.layout { padding: 0 16px 24px; display: grid; gap: 16px; max-width: 1100px; margin: 0 auto; }
-@media (min-width: 860px) {
-  .layout { grid-template-columns: minmax(360px, 1fr) 1fr; align-items: start; }
-  .radar-wrap { position: sticky; top: 76px; }
+.layout { padding: 4px 16px 32px; display: grid; gap: 16px; max-width: var(--maxw); margin: 0 auto; }
+.side { display: grid; gap: 12px; min-width: 0; }
+.list-wrap { min-width: 0; }
+@media (min-width: 900px) {
+  /* Radar column sized so radar + tiles fit in the viewport height */
+  .layout { grid-template-columns: clamp(340px, min(calc(100vh - 300px), 50%), 540px) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .side { position: sticky; top: 78px; }
 }
+
+/* Tiles */
+.tiles { display: grid; grid-template-columns: 1fr 1.35fr; gap: 12px; }
+@media (max-width: 359px) { .tiles { grid-template-columns: 1fr; } }
+.tile {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+}
+.tile-label { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; font-weight: 600; }
+.tile-value { font-size: 34px; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+.tile-value small { font-size: 16px; font-weight: 600; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+.tile-sub { font-size: 12.5px; color: var(--muted); }
+.tile-sub b { color: var(--text); font-weight: 600; }
+.count-tile .tile-value { color: var(--accent); }
+.range-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+
+/* Custom range slider; --p is the filled percentage, set from JS */
+input.range {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 28px; margin: 4px 0 0;
+  padding: 0; border: 0; background: transparent; cursor: pointer; --p: 50%;
+}
+input.range:focus { outline: none; }
+input.range::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent) var(--p), var(--line) var(--p));
+}
+input.range::-moz-range-track { height: 6px; border-radius: 3px; background: var(--line); }
+input.range::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--accent); }
+input.range::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%;
+  background: #fff; border: 5px solid var(--accent); box-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+  transition: transform .15s;
+}
+input.range::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #fff; border: 5px solid var(--accent); box-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+}
+input.range:active::-webkit-slider-thumb { transform: scale(1.15); }
+input.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(56, 211, 159, .35); }
 
 /* Radar */
 .radar-wrap {
@@ -102,7 +147,9 @@ h2 { font-size: 16px; }
 @keyframes live { 0% { box-shadow: 0 0 0 0 rgba(56, 211, 159, .6); } 100% { box-shadow: 0 0 0 8px rgba(56, 211, 159, 0); } }
 
 /* List */
-.list-head { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 2px 10px; }
+#highlights b { color: var(--text); font-weight: 600; }
+.list-head { display: flex; flex-wrap: wrap; column-gap: 12px; row-gap: 2px; justify-content: space-between; align-items: baseline; margin: 0 2px 10px; min-height: 22px; }
+.list-head h2 { white-space: nowrap; }
 .cards { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .card {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
@@ -184,6 +231,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 </head>
 <body>
   <header class="topbar">
+   <div class="topbar-inner">
     <div class="brand">
       <svg viewBox="0 0 24 24" class="brand-icon" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
       <div>
@@ -194,24 +242,41 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
     <button id="settingsBtn" class="icon-btn" aria-label="Ustawienia">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zm7.4-2.5a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5z"/></svg>
     </button>
+   </div>
   </header>
 
   <main class="layout">
-    <section class="radar-wrap">
-      <svg id="radar" viewBox="-110 -110 220 220" role="img" aria-label="Radar samolotów wokół domu"></svg>
-      <div class="status">
-        <span id="statusDot" class="dot"></span>
-        <span id="statusText">Łączenie…</span>
+    <div class="side">
+      <section class="radar-wrap">
+        <svg id="radar" viewBox="-110 -110 220 220" role="img" aria-label="Radar samolotów wokół domu"></svg>
+        <div class="status">
+          <span id="statusDot" class="dot"></span>
+          <span id="statusText">Łączenie…</span>
+        </div>
+      </section>
+
+      <div class="tiles">
+        <section class="tile count-tile" aria-live="polite">
+          <span class="tile-label">W zasięgu</span>
+          <div class="tile-value" id="count">0</div>
+          <span class="tile-sub" id="countLabel">samolotów w promieniu 15 km</span>
+        </section>
+        <section class="tile">
+          <label class="tile-label" for="radiusRange">Promień</label>
+          <div class="tile-value"><span id="radiusValue">15</span><small>km</small></div>
+          <input id="radiusRange" class="range" type="range" min="3" max="60" step="1" aria-label="Promień w kilometrach">
+          <div class="range-scale"><span>3 km</span><span>60 km</span></div>
+        </section>
       </div>
-    </section>
+    </div>
 
     <section class="list-wrap">
       <div class="list-head">
-        <h2><span id="count">0</span> w zasięgu</h2>
-        <span id="radiusLabel" class="muted"></span>
+        <h2>Loty w pobliżu</h2>
+        <span id="highlights" class="muted small"></span>
       </div>
       <ul id="list" class="cards"></ul>
-      <p id="empty" class="empty" hidden>Teraz nic nie leci nad Tobą. Spróbuj zwiększyć promień w ustawieniach.</p>
+      <p id="empty" class="empty" hidden>Teraz nic nie leci nad Tobą. Spróbuj zwiększyć promień suwakiem.</p>
     </section>
   </main>
 
@@ -236,9 +301,6 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
         </label>
       </div>
       <button type="button" id="geoBtn" class="btn ghost">📍 Użyj mojej lokalizacji</button>
-      <label><span>Promień: <b id="radiusOut"></b> km</span>
-        <input name="radiusKm" type="range" min="3" max="60" step="1">
-      </label>
       <label>Źródło danych
         <select name="source">
           <option value="adsb.lol">adsb.lol</option>
@@ -290,7 +352,8 @@ const AIRLINES = {
 
 const state = {
   settings: loadSettings(),
-  aircraft: [],
+  all: [],              // everything the API returned, normalized
+  aircraft: [],         // subset inside the current radius
   trails: new Map(),     // hex -> [[x,y], ...]
   routes: new Map(),     // callsign -> route object | null
   routePending: new Set(),
@@ -312,6 +375,8 @@ function loadSettings() {
   } catch { /* storage unavailable */ }
   return { ...DEFAULTS, saved: false };
 }
+
+const stripSaved = ({ saved, ...rest }) => rest;
 
 function saveSettings(s) {
   state.settings = { ...s, saved: true };
@@ -424,8 +489,8 @@ async function lookupRoute(callsign) {
 async function tick() {
   try {
     const { list, source } = await fetchAircraft();
-    const r = state.settings.radiusKm;
-    state.aircraft = list.map(normalize).filter((a) => a && a.distKm <= r).sort((a, b) => a.distKm - b.distKm);
+    state.all = list.map(normalize).filter(Boolean).sort((a, b) => a.distKm - b.distKm);
+    applyRadius();
     updateTrails();
     state.lastOk = Date.now();
     setStatus('live', DEMO ? 'Tryb demo' : `Na żywo · ${source}`);
@@ -435,6 +500,10 @@ async function tick() {
     console.warn('fetch failed', e);
   }
   render();
+}
+
+function applyRadius() {
+  state.aircraft = state.all.filter((a) => a.distKm <= state.settings.radiusKm);
 }
 
 function updateTrails() {
@@ -561,8 +630,30 @@ function cardHtml(a) {
   </li>`;
 }
 
+function planesWord(n) {
+  if (n === 1) return 'samolot';
+  const d = n % 10, dd = n % 100;
+  return d >= 2 && d <= 4 && (dd < 12 || dd > 14) ? 'samoloty' : 'samolotów';
+}
+
+function renderTiles() {
+  const n = state.aircraft.length;
+  const r = state.settings.radiusKm;
+  $('#count').textContent = n;
+  $('#countLabel').textContent = `${planesWord(n)} w promieniu ${r} km`;
+  $('#radiusValue').textContent = r;
+  const range = $('#radiusRange');
+  if (+range.value !== r) range.value = r;
+  range.style.setProperty('--p', `${((r - range.min) / (range.max - range.min)) * 100}%`);
+
+  const airborne = state.aircraft.filter((a) => !a.onGround && a.altFt != null);
+  const highest = airborne.reduce((m, a) => (!m || a.altFt > m.altFt ? a : m), null);
+  $('#highlights').innerHTML = n
+    ? `najbliżej <b>${fmt(state.aircraft[0].distKm, 1)} km</b>${highest ? ` · najwyżej <b>${altText(highest)}</b>` : ''}`
+    : '';
+}
+
 function renderList() {
-  $('#count').textContent = state.aircraft.length;
   $('#list').innerHTML = state.aircraft.map(cardHtml).join('');
   $('#empty').hidden = state.aircraft.length > 0 || !state.lastOk;
 }
@@ -608,7 +699,7 @@ function renderSheet() {
 function render() {
   const s = state.settings;
   $('#place').textContent = `${s.label || 'Mój dom'} · ${s.lat.toFixed(3)}, ${s.lon.toFixed(3)}`;
-  $('#radiusLabel').textContent = `promień ${s.radiusKm} km`;
+  renderTiles();
   renderRadar();
   renderList();
   if (state.selected) renderSheet();
@@ -636,9 +727,7 @@ function openSettings() {
   f.label.value = s.label || '';
   f.lat.value = s.lat;
   f.lon.value = s.lon;
-  f.radiusKm.value = s.radiusKm;
   f.source.value = s.source;
-  $('#radiusOut').textContent = s.radiusKm;
   $('#settings').showModal();
 }
 
@@ -653,7 +742,15 @@ function bind() {
   $('#settingsBtn').addEventListener('click', openSettings);
 
   const f = $('#settingsForm');
-  f.radiusKm.addEventListener('input', () => { $('#radiusOut').textContent = f.radiusKm.value; });
+  // Radius slider: redraw instantly from data we already have, refetch once the user stops dragging.
+  let radiusTimer;
+  $('#radiusRange').addEventListener('input', (e) => {
+    state.settings.radiusKm = parseInt(e.target.value, 10);
+    applyRadius();
+    render();
+    clearTimeout(radiusTimer);
+    radiusTimer = setTimeout(() => { saveSettings(stripSaved(state.settings)); restart(); }, 450);
+  });
   $('#geoBtn').addEventListener('click', () => {
     if (!navigator.geolocation) return alert('Ta przeglądarka nie udostępnia lokalizacji.');
     $('#geoBtn').textContent = 'Ustalanie lokalizacji…';
@@ -674,7 +771,7 @@ function bind() {
       label: f.label.value.trim(),
       lat: parseFloat(f.lat.value),
       lon: parseFloat(f.lon.value),
-      radiusKm: parseInt(f.radiusKm.value, 10),
+      radiusKm: state.settings.radiusKm,
       source: f.source.value,
     });
     state.trails.clear();
@@ -707,11 +804,11 @@ const DEMO_ROUTES = {
 };
 
 function demoAircraft() {
-  const { lat, lon, radiusKm } = state.settings;
+  const { lat, lon } = state.settings;
   const t = Date.now() / 1000;
   const list = DEMO_FLEET.map((p) => {
     const ang = p.ph + p.w * t;
-    const rKm = p.r0 * radiusKm;
+    const rKm = p.r0 * 22;
     const x = Math.cos(ang) * rKm, y = Math.sin(ang) * rKm;
     // tangent direction of circular motion -> compass track
     const track = (Math.atan2(-Math.sin(ang) * Math.sign(p.w), Math.cos(ang) * Math.sign(p.w)) * 180 / Math.PI + 360) % 360;
