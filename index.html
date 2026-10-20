@@ -225,6 +225,8 @@ input, select {
   border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
 }
 input[type=range] { padding: 0; accent-color: var(--accent); }
+dialog label.check { display: flex; align-items: center; gap: 10px; color: var(--text); font-size: 14px; cursor: pointer; }
+dialog label.check input { width: 20px; height: 20px; flex: none; padding: 0; accent-color: var(--accent); }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
 .btn {
   font: inherit; font-weight: 600; border-radius: 12px; padding: 10px 16px; cursor: pointer;
@@ -330,6 +332,10 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
       <label>Serwer pośredniczący (Cloudflare Worker)
         <input name="proxy" type="url" placeholder="https://nazwa-workera.konto.workers.dev" inputmode="url" autocomplete="off">
       </label>
+      <label class="check">
+        <input name="showGround" type="checkbox">
+        <span>Pokazuj samoloty na ziemi (kołujące, na płycie lotniska)</span>
+      </label>
       <p class="muted small">Ustawienia zostają tylko w tej przeglądarce. Do API wysyłany jest środek obszaru i promień.</p>
       <div class="actions">
         <button value="cancel" formnovalidate class="btn ghost">Anuluj</button>
@@ -352,7 +358,7 @@ const DEMO = new URLSearchParams(location.search).has('demo');
 // The public APIs refuse direct browser requests (CORS), so the app talks to them through
 // a Cloudflare Worker (worker/plane-radar-proxy.js) whose address the user enters in settings.
 
-const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.lol', proxy: '' };
+const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.lol', proxy: '', showGround: false };
 
 // All three return the readsb / ADSBexchange v2 format (aircraft list in "ac"). Radius is in NM.
 // Through the proxy every source uses the same path: {proxy}/{source}/v2/point/{lat}/{lon}/{nm}
@@ -394,7 +400,8 @@ const AIRLINES = {
 const state = {
   settings: loadSettings(),
   all: [],              // everything the API returned, normalized
-  aircraft: [],         // subset inside the current radius
+  aircraft: [],         // subset inside the current radius (no vehicles, ground traffic optional)
+  hiddenGround: 0,
   trails: new Map(),     // hex -> [[x,y], ...]
   routes: new Map(),     // callsign -> route object | null
   routePending: new Set(),
@@ -460,6 +467,8 @@ function normalize(ac) {
   const [x, y] = project(ac.lat, ac.lon);
   const distKm = Math.hypot(x, y);
   const onGround = ac.alt_baro === 'ground';
+  // ADS-B emitter category C1–C3 = surface vehicles / obstacles (follow-me cars, tugs, towers).
+  const isVehicle = /^C[1-3]$/.test(ac.category || '') || ['TWR', 'GND', 'SERV'].includes(ac.t);
   const altFt = onGround ? 0 : (typeof ac.alt_baro === 'number' ? ac.alt_baro : ac.alt_geom ?? null);
   return {
     hex: ac.hex,
@@ -469,6 +478,7 @@ function normalize(ac) {
     desc: ac.desc || null,
     altFt,
     onGround,
+    isVehicle,
     speedKmh: ac.gs != null ? ac.gs * 1.852 : null,
     track: ac.track ?? ac.true_heading ?? null,
     vsMs: (ac.baro_rate ?? ac.geom_rate) != null ? (ac.baro_rate ?? ac.geom_rate) * 0.00508 : null,
@@ -513,6 +523,25 @@ async function fetchAircraft() {
   throw new Error(errors.join('\n'));
 }
 
+const airport = (a) => ({ code: a.iata_code || a.icao_code, city: a.municipality, lat: a.latitude, lon: a.longitude });
+
+// Great-circle distance in km.
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const rad = Math.PI / 180;
+  const h = Math.sin((lat2 - lat1) * rad / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin((lon2 - lon1) * rad / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+// adsbdb maps callsign -> route, but airlines reuse flight numbers on different routes.
+// Accept the route only if the aircraft is roughly on the way from origin to destination.
+function routeFits(route, a) {
+  const { from, to } = route;
+  if (from?.lat == null || to?.lat == null) return true; // can't check, trust it
+  const direct = haversineKm(from.lat, from.lon, to.lat, to.lon);
+  const via = haversineKm(from.lat, from.lon, a.lat, a.lon) + haversineKm(a.lat, a.lon, to.lat, to.lon);
+  return via <= direct * 1.3 + 150;
+}
+
 async function lookupRoute(callsign) {
   if (!callsign || state.routes.has(callsign) || state.routePending.has(callsign)) return;
   state.routePending.add(callsign);
@@ -530,8 +559,8 @@ async function lookupRoute(callsign) {
       airline: fr.airline?.name ?? null,
       iata: fr.airline?.iata ?? null,
       flightIata: fr.callsign_iata ?? null,
-      from: fr.origin ? { code: fr.origin.iata_code || fr.origin.icao_code, city: fr.origin.municipality } : null,
-      to: fr.destination ? { code: fr.destination.iata_code || fr.destination.icao_code, city: fr.destination.municipality } : null,
+      from: fr.origin ? airport(fr.origin) : null,
+      to: fr.destination ? airport(fr.destination) : null,
     } : null);
   } finally {
     state.routePending.delete(callsign);
@@ -571,7 +600,10 @@ async function tick() {
 const nextDelay = () => state.fails ? Math.min(REFRESH_MS * 2 ** state.fails, MAX_BACKOFF_MS) : REFRESH_MS;
 
 function applyRadius() {
-  state.aircraft = state.all.filter((a) => a.distKm <= state.settings.radiusKm);
+  const inRange = state.all.filter((a) => a.distKm <= state.settings.radiusKm && !a.isVehicle);
+  const showGround = state.settings.showGround;
+  state.hiddenGround = showGround ? 0 : inRange.filter((a) => a.onGround).length;
+  state.aircraft = showGround ? inRange : inRange.filter((a) => !a.onGround);
 }
 
 function updateTrails() {
@@ -595,7 +627,8 @@ function setStatus(kind, text) {
 }
 
 function info(a) {
-  const route = state.routes.get(a.callsign) || null;
+  let route = state.routes.get(a.callsign) || null;
+  if (route?.from && route?.to && !routeFits(route, a)) route = { ...route, from: null, to: null };
   const al = airlineFromCallsign(a.callsign);
   return {
     route,
@@ -708,7 +741,8 @@ function renderTiles() {
   const n = state.aircraft.length;
   const r = state.settings.radiusKm;
   $('#count').textContent = n;
-  $('#countLabel').textContent = `${planesWord(n)} w promieniu ${r} km`;
+  $('#countLabel').textContent = `${planesWord(n)} w promieniu ${r} km`
+    + (state.hiddenGround ? ` · ${state.hiddenGround} na ziemi (ukryte)` : '');
   $('#radiusValue').textContent = r;
   const range = $('#radiusRange');
   if (+range.value !== r) range.value = r;
@@ -797,6 +831,7 @@ function openSettings() {
   f.lon.value = s.lon;
   f.source.value = s.source;
   f.proxy.value = s.proxy || '';
+  f.showGround.checked = !!s.showGround;
   $('#settings').showModal();
 }
 
@@ -844,6 +879,7 @@ function bind() {
       radiusKm: state.settings.radiusKm,
       source: f.source.value,
       proxy: f.proxy.value.trim(),
+      showGround: f.showGround.checked,
     });
     state.trails.clear();
     restart();
