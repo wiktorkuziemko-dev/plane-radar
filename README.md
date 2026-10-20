@@ -13,7 +13,7 @@ przewoźnika, numer lotu, trasę, wysokość, prędkość, prędkość pionową,
 ## Źródła danych (darmowe, bez klucza API)
 | Dane | Źródło |
 |---|---|
-| Pozycje samolotów (ADS-B), przez serwer pośredniczący | [adsb.fi](https://adsb.fi), [adsb.lol](https://adsb.lol) albo [airplanes.live](https://airplanes.live), z automatycznym przełączeniem na kolejne, gdy któreś nie odpowiada |
+| Pozycje samolotów (ADS-B), przez serwer pośredniczący | [adsb.lol](https://adsb.lol). Zapasowo [adsb.fi](https://adsb.fi) i [airplanes.live](https://airplanes.live), ale obecnie oba odrzucają zapytania z Cloudflare Workers |
 | Przewoźnik i trasa po znaku wywoławczym | [adsbdb.com](https://www.adsbdb.com) |
 | Logotypy linii | pics.avs.io, a gdy logo się nie wczyta, kolorowa plakietka z kodem ICAO |
 

@@ -287,7 +287,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
         <pre id="errorDetails"></pre>
         <p id="errorHint" class="small"></p>
         <button type="button" id="errorSettingsBtn" class="btn primary">Ustaw serwer pośredniczący</button>
-        <p class="muted small">Aplikacja ponawia próbę co 5 s. Dane demo zobaczysz po dopisaniu <code>?demo</code> do adresu.</p>
+        <p class="muted small">Aplikacja ponawia próby, coraz rzadziej (do 60 s). Dane demo zobaczysz po dopisaniu <code>?demo</code> do adresu.</p>
       </div>
     </section>
   </main>
@@ -322,8 +322,8 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
       <button type="button" id="geoBtn" class="btn ghost">📍 Użyj mojej lokalizacji</button>
       <label>Źródło danych
         <select name="source">
-          <option value="adsb.fi">adsb.fi</option>
           <option value="adsb.lol">adsb.lol</option>
+          <option value="adsb.fi">adsb.fi</option>
           <option value="airplanes.live">airplanes.live</option>
         </select>
       </label>
@@ -344,6 +344,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 // ---------- Config ----------
 
 const REFRESH_MS = 5000;          // public APIs allow ~1 req/s; 5 s is polite
+const MAX_BACKOFF_MS = 60000;     // after failures (e.g. 429 rate limit) wait 10 s, 20 s, 40 s, 60 s…
 const TRAIL_POINTS = 12;
 const STORAGE_KEY = 'plane-radar.settings';
 const DEMO = new URLSearchParams(location.search).has('demo');
@@ -351,13 +352,14 @@ const DEMO = new URLSearchParams(location.search).has('demo');
 // The public APIs refuse direct browser requests (CORS), so the app talks to them through
 // a Cloudflare Worker (worker/plane-radar-proxy.js) whose address the user enters in settings.
 
-const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.fi', proxy: '' };
+const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.lol', proxy: '' };
 
 // All three return the readsb / ADSBexchange v2 format (aircraft list in "ac"). Radius is in NM.
 // Through the proxy every source uses the same path: {proxy}/{source}/v2/point/{lat}/{lon}/{nm}
+// Order matters: it is the fallback order. adsb.fi and airplanes.live currently refuse Cloudflare Workers.
 const SOURCES = {
-  'adsb.fi': (lat, lon, nm) => `https://opendata.adsb.fi/api/v2/lat/${lat}/lon/${lon}/dist/${nm}`,
   'adsb.lol': (lat, lon, nm) => `https://api.adsb.lol/v2/point/${lat}/${lon}/${nm}`,
+  'adsb.fi': (lat, lon, nm) => `https://opendata.adsb.fi/api/v2/lat/${lat}/lon/${lon}/dist/${nm}`,
   'airplanes.live': (lat, lon, nm) => `https://api.airplanes.live/v2/point/${lat}/${lon}/${nm}`,
 };
 
@@ -399,6 +401,7 @@ const state = {
   selected: null,
   lastOk: 0,
   timer: null,
+  fails: 0,             // consecutive failed polls, drives the backoff
   gen: 0,               // bumped on restart so responses from before a settings change are ignored
 };
 
@@ -545,12 +548,15 @@ async function tick() {
     applyRadius();
     updateTrails();
     state.lastOk = Date.now();
+    state.fails = 0;
     $('#errorBox').hidden = true;
     setStatus('live', DEMO ? 'Tryb demo' : `Na żywo · ${source}`);
     state.aircraft.forEach((a) => lookupRoute(a.callsign));
   } catch (e) {
     if (gen !== state.gen) return;
-    setStatus(state.lastOk ? 'warn' : 'err', state.lastOk ? 'Problem z połączeniem – ponawiam…' : 'Brak danych – szczegóły pod listą');
+    state.fails++;
+    const wait = Math.round(nextDelay() / 1000);
+    setStatus(state.lastOk ? 'warn' : 'err', state.lastOk ? `Problem z połączeniem – ponawiam za ${wait} s` : 'Brak danych – szczegóły pod listą');
     $('#errorDetails').textContent = `${new Date().toLocaleTimeString('pl-PL')} · ${location.origin}\n${e.message}`;
     $('#errorHint').innerHTML = proxyBase()
       ? 'Sprawdź, czy adres serwera pośredniczącego w ustawieniach jest poprawny i czy Worker działa.'
@@ -559,7 +565,10 @@ async function tick() {
     console.warn('fetch failed', e);
   }
   render();
+  state.timer = setTimeout(tick, nextDelay());
 }
+
+const nextDelay = () => state.fails ? Math.min(REFRESH_MS * 2 ** state.fails, MAX_BACKOFF_MS) : REFRESH_MS;
 
 function applyRadius() {
   state.aircraft = state.all.filter((a) => a.distKm <= state.settings.radiusKm);
@@ -844,8 +853,10 @@ function bind() {
   document.addEventListener('visibilitychange', () => document.hidden ? stop() : restart());
 }
 
-function stop() { clearInterval(state.timer); state.timer = null; }
-function restart() { stop(); state.gen++; tick(); state.timer = setInterval(tick, REFRESH_MS); }
+// Polling is a setTimeout chain (not setInterval) so the delay can grow after failures.
+// Bumping gen makes any in-flight tick drop its result and not schedule another one.
+function stop() { clearTimeout(state.timer); state.timer = null; state.gen++; }
+function restart() { stop(); state.fails = 0; tick(); }
 
 // ---------- Demo data (?demo) ----------
 
