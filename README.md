@@ -13,14 +13,14 @@ przewoźnika, numer lotu, trasę, wysokość, prędkość, prędkość pionową,
 ## Źródła danych (darmowe, bez klucza API)
 | Dane | Źródło |
 |---|---|
-| Pozycje samolotów (ADS-B), przez serwer pośredniczący | [adsb.lol](https://adsb.lol) albo [airplanes.live](https://airplanes.live), z automatycznym przełączeniem na drugie, gdy pierwsze nie odpowiada |
+| Pozycje samolotów (ADS-B), przez serwer pośredniczący | [adsb.fi](https://adsb.fi), [adsb.lol](https://adsb.lol) albo [airplanes.live](https://airplanes.live), z automatycznym przełączeniem na kolejne, gdy któreś nie odpowiada |
 | Przewoźnik i trasa po znaku wywoławczym | [adsbdb.com](https://www.adsbdb.com) |
 | Logotypy linii | pics.avs.io, a gdy logo się nie wczyta, kolorowa plakietka z kodem ICAO |
 
 Te serwisy są przeznaczone do użytku niekomercyjnego i mają limity zapytań (około 1 na sekundę).
 
 ## Serwer pośredniczący (wymagany)
-adsb.lol, airplanes.live i adsbdb.com nie wysyłają nagłówków CORS, więc przeglądarka blokuje zapytania wysłane prosto ze strony.
+adsb.fi, adsb.lol, airplanes.live i adsbdb.com nie wysyłają nagłówków CORS, więc przeglądarka blokuje zapytania wysłane prosto ze strony.
 Dlatego aplikacja łączy się z nimi przez mały Cloudflare Worker: plik [`worker/plane-radar-proxy.js`](worker/plane-radar-proxy.js).
 Darmowy plan Cloudflare daje 100 000 zapytań dziennie. Aplikacja otwarta przez całą dobę zużywa około 17 000.
 
@@ -30,7 +30,8 @@ Darmowy plan Cloudflare daje 100 000 zapytań dziennie. Aplikacja otwarta przez 
 4. Zalecane: w Workerze otwórz **Settings → Variables and Secrets → Add**. Dodaj zmienną tekstową `ALLOWED_ORIGINS`
    z adresem Twojej strony, np. `https://<login>.github.io`, i zapisz (**Deploy**).
    Wtedy z Workera może korzystać tylko Twoja strona. Kilka adresów oddziel przecinkami.
-5. W aplikacji otwórz ⚙️ Ustawienia, wklej adres Workera (`https://<nazwa>.<konto>.workers.dev`) w polu
+5. Sprawdź źródła danych: otwórz `https://<nazwa>.<konto>.workers.dev/diag`. Strona pokaże, które serwisy odpowiadają Workerowi.
+6. W aplikacji otwórz ⚙️ Ustawienia, wklej adres Workera (`https://<nazwa>.<konto>.workers.dev`) w polu
    **Serwer pośredniczący** i zapisz.
 
 Adres Workera nie jest zapisany w kodzie. Zostaje tylko w przeglądarce, w której go wpiszesz, więc na każdym urządzeniu trzeba go podać raz.

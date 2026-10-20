@@ -187,6 +187,8 @@ input.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(56,
 .vs-up { color: var(--accent); }
 .vs-down { color: var(--warn); }
 .empty { color: var(--muted); text-align: center; padding: 30px 10px; }
+.credits { max-width: var(--maxw); margin: 0 auto; padding: 0 16px 24px; font-size: 12px; color: var(--muted); text-align: center; }
+.credits a { color: inherit; }
 .error-box { background: var(--panel); border: 1px solid var(--err); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 8px; }
 .error-box pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 12.5px; color: var(--err); }
 
@@ -290,6 +292,13 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
     </section>
   </main>
 
+  <footer class="credits">
+    Dane: <a href="https://adsb.fi" target="_blank" rel="noopener">adsb.fi</a> ·
+    <a href="https://adsb.lol" target="_blank" rel="noopener">adsb.lol</a> ·
+    <a href="https://airplanes.live" target="_blank" rel="noopener">airplanes.live</a> ·
+    trasy: <a href="https://www.adsbdb.com" target="_blank" rel="noopener">adsbdb.com</a>
+  </footer>
+
   <div id="sheetBackdrop" class="backdrop" hidden></div>
   <aside id="sheet" class="sheet" aria-hidden="true">
     <div class="sheet-grip"></div>
@@ -313,6 +322,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
       <button type="button" id="geoBtn" class="btn ghost">📍 Użyj mojej lokalizacji</button>
       <label>Źródło danych
         <select name="source">
+          <option value="adsb.fi">adsb.fi</option>
           <option value="adsb.lol">adsb.lol</option>
           <option value="airplanes.live">airplanes.live</option>
         </select>
@@ -341,19 +351,20 @@ const DEMO = new URLSearchParams(location.search).has('demo');
 // The public APIs refuse direct browser requests (CORS), so the app talks to them through
 // a Cloudflare Worker (worker/plane-radar-proxy.js) whose address the user enters in settings.
 
-const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.lol', proxy: '' };
+const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.fi', proxy: '' };
 
-// Both services expose the readsb "v2" format: /v2/point/{lat}/{lon}/{radius in NM}
+// All three return the readsb / ADSBexchange v2 format (aircraft list in "ac"). Radius is in NM.
+// Through the proxy every source uses the same path: {proxy}/{source}/v2/point/{lat}/{lon}/{nm}
 const SOURCES = {
-  'adsb.lol': 'https://api.adsb.lol',
-  'airplanes.live': 'https://api.airplanes.live',
+  'adsb.fi': (lat, lon, nm) => `https://opendata.adsb.fi/api/v2/lat/${lat}/lon/${lon}/dist/${nm}`,
+  'adsb.lol': (lat, lon, nm) => `https://api.adsb.lol/v2/point/${lat}/${lon}/${nm}`,
+  'airplanes.live': (lat, lon, nm) => `https://api.airplanes.live/v2/point/${lat}/${lon}/${nm}`,
 };
 
 const proxyBase = () => (state.settings.proxy || '').trim().replace(/\/+$/, '');
 
 function aircraftUrl(key, lat, lon, nm) {
-  const path = `/v2/point/${lat}/${lon}/${nm}`;
-  return proxyBase() ? `${proxyBase()}/${key}${path}` : SOURCES[key] + path;
+  return proxyBase() ? `${proxyBase()}/${key}/v2/point/${lat}/${lon}/${nm}` : SOURCES[key](lat, lon, nm);
 }
 
 function routeUrl(callsign) {
@@ -493,7 +504,7 @@ async function fetchAircraft() {
   for (const key of order) {
     try {
       const data = await fetchJSON(aircraftUrl(key, lat.toFixed(4), lon.toFixed(4), nm));
-      return { list: data.ac || [], source: key };
+      return { list: data.ac || data.aircraft || [], source: key };
     } catch (e) { errors.push(`${key}: ${describeError(e)}`); }
   }
   throw new Error(errors.join('\n'));
