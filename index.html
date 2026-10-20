@@ -27,6 +27,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 html, body {
   margin: 0;
@@ -282,8 +283,8 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
       <div id="errorBox" class="error-box" hidden>
         <b>Nie udało się pobrać danych</b>
         <pre id="errorDetails"></pre>
-        <p class="muted small">Podgląd w aplikacji Claude albo plik otwarty z dysku może nie mieć dostępu do sieci.
-          Otwórz stronę z GitHub Pages. Aplikacja ponawia próbę co 5 s. Dane demo zobaczysz po dopisaniu <code>?demo</code> do adresu.</p>
+        <p id="errorHint" class="small"></p>
+        <p class="muted small">Aplikacja ponawia próbę co 5 s. Dane demo zobaczysz po dopisaniu <code>?demo</code> do adresu.</p>
       </div>
     </section>
   </main>
@@ -315,7 +316,10 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
           <option value="airplanes.live">airplanes.live</option>
         </select>
       </label>
-      <p class="muted small">Lokalizacja zostaje tylko w tej przeglądarce. Do API wysyłany jest środek obszaru i promień.</p>
+      <label>Serwer pośredniczący (Cloudflare Worker)
+        <input name="proxy" type="url" placeholder="https://plane-radar-proxy.…workers.dev" inputmode="url" autocomplete="off">
+      </label>
+      <p class="muted small">Ustawienia zostają tylko w tej przeglądarce. Do API wysyłany jest środek obszaru i promień.</p>
       <div class="actions">
         <button value="cancel" formnovalidate class="btn ghost">Anuluj</button>
         <button value="save" class="btn primary">Zapisz</button>
@@ -333,13 +337,29 @@ const TRAIL_POINTS = 12;
 const STORAGE_KEY = 'plane-radar.settings';
 const DEMO = new URLSearchParams(location.search).has('demo');
 
-const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.lol' };
+// CORS proxy (see worker/plane-radar-proxy.js). The public APIs refuse direct browser requests,
+// so the app talks to them through this Cloudflare Worker. Can be overridden in settings.
+const PROXY_URL = '';
+
+const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.lol', proxy: '' };
 
 // Both services expose the readsb "v2" format: /v2/point/{lat}/{lon}/{radius in NM}
 const SOURCES = {
-  'adsb.lol': (lat, lon, nm) => `https://api.adsb.lol/v2/point/${lat}/${lon}/${nm}`,
-  'airplanes.live': (lat, lon, nm) => `https://api.airplanes.live/v2/point/${lat}/${lon}/${nm}`,
+  'adsb.lol': 'https://api.adsb.lol',
+  'airplanes.live': 'https://api.airplanes.live',
 };
+
+const proxyBase = () => (state.settings.proxy || PROXY_URL).trim().replace(/\/+$/, '');
+
+function aircraftUrl(key, lat, lon, nm) {
+  const path = `/v2/point/${lat}/${lon}/${nm}`;
+  return proxyBase() ? `${proxyBase()}/${key}${path}` : SOURCES[key] + path;
+}
+
+function routeUrl(callsign) {
+  const cs = encodeURIComponent(callsign);
+  return proxyBase() ? `${proxyBase()}/route/${cs}` : `https://api.adsbdb.com/v0/callsign/${cs}`;
+}
 
 // Fallback airline names + IATA codes when the route lookup has nothing.
 const AIRLINES = {
@@ -449,7 +469,7 @@ async function fetchJSON(url, timeoutMs = 8000) {
   const t = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const res = await fetch(url, { signal: ctl.signal, cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
     return await res.json();
   } finally {
     clearTimeout(t);
@@ -471,7 +491,7 @@ async function fetchAircraft() {
   const errors = [];
   for (const key of order) {
     try {
-      const data = await fetchJSON(SOURCES[key](lat.toFixed(4), lon.toFixed(4), nm));
+      const data = await fetchJSON(aircraftUrl(key, lat.toFixed(4), lon.toFixed(4), nm));
       return { list: data.ac || [], source: key };
     } catch (e) { errors.push(`${key}: ${describeError(e)}`); }
   }
@@ -483,7 +503,13 @@ async function lookupRoute(callsign) {
   state.routePending.add(callsign);
   try {
     if (DEMO) { state.routes.set(callsign, DEMO_ROUTES[callsign] ?? null); return; }
-    const data = await fetchJSON(`https://api.adsbdb.com/v0/callsign/${encodeURIComponent(callsign)}`);
+    let data = null;
+    try {
+      data = await fetchJSON(routeUrl(callsign));
+    } catch (e) {
+      // 404 = adsbdb doesn't know this callsign; remember that. Anything else: retry on a later tick.
+      if (e.status !== 404) return;
+    }
     const fr = data?.response?.flightroute;
     state.routes.set(callsign, fr ? {
       airline: fr.airline?.name ?? null,
@@ -492,9 +518,6 @@ async function lookupRoute(callsign) {
       from: fr.origin ? { code: fr.origin.iata_code || fr.origin.icao_code, city: fr.origin.municipality } : null,
       to: fr.destination ? { code: fr.destination.iata_code || fr.destination.icao_code, city: fr.destination.municipality } : null,
     } : null);
-  } catch {
-    // Network hiccup: allow a retry on a later tick.
-    return;
   } finally {
     state.routePending.delete(callsign);
   }
@@ -514,6 +537,9 @@ async function tick() {
   } catch (e) {
     setStatus(state.lastOk ? 'warn' : 'err', state.lastOk ? 'Problem z połączeniem – ponawiam…' : 'Brak danych – szczegóły pod listą');
     $('#errorDetails').textContent = `${new Date().toLocaleTimeString('pl-PL')} · ${location.origin}\n${e.message}`;
+    $('#errorHint').innerHTML = proxyBase()
+      ? 'Sprawdź, czy adres serwera pośredniczącego w ustawieniach jest poprawny i czy Worker działa.'
+      : 'Te serwisy nie pozwalają na zapytania prosto z przeglądarki (CORS). Ustaw adres serwera pośredniczącego w ustawieniach ⚙️ – instrukcja w README repozytorium.';
     $('#errorBox').hidden = !!state.lastOk;
     console.warn('fetch failed', e);
   }
@@ -746,6 +772,7 @@ function openSettings() {
   f.lat.value = s.lat;
   f.lon.value = s.lon;
   f.source.value = s.source;
+  f.proxy.value = s.proxy || '';
   $('#settings').showModal();
 }
 
@@ -791,6 +818,7 @@ function bind() {
       lon: parseFloat(f.lon.value),
       radiusKm: state.settings.radiusKm,
       source: f.source.value,
+      proxy: f.proxy.value.trim(),
     });
     state.trails.clear();
     restart();
