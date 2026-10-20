@@ -7,11 +7,9 @@
 //   GET /airplanes.live/v2/point/{lat}/{lon}/{radiusNm}  -> https://api.airplanes.live/v2/point/...
 //   GET /route/{callsign}                                -> https://api.adsbdb.com/v0/callsign/...
 
-// Pages allowed to use this proxy. Add your own domain here if you host the app elsewhere.
-const ALLOWED_ORIGINS = [
-  'https://wiktorkuziemko-dev.github.io',
-  'http://localhost:8000',
-];
+// Which pages may use this proxy is configured outside the code, in the Worker's
+// Settings → Variables: ALLOWED_ORIGINS = comma-separated origins, e.g. "https://login.github.io".
+// If the variable is not set, any page may use the proxy (still limited to the three routes below).
 
 const UPSTREAMS = {
   'adsb.lol': 'https://api.adsb.lol',
@@ -22,11 +20,12 @@ const POINT = /^\/(adsb\.lol|airplanes\.live)\/v2\/point\/(-?\d{1,2}(?:\.\d{1,6}
 const ROUTE = /^\/route\/([A-Za-z0-9]{2,8})$/;
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
+    const allowedOrigins = (env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean);
     const origin = request.headers.get('Origin') || '';
-    const allowed = ALLOWED_ORIGINS.includes(origin);
+    const allowed = allowedOrigins.length === 0 || allowedOrigins.includes(origin);
     const cors = {
-      'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
+      'Access-Control-Allow-Origin': allowedOrigins.length === 0 ? '*' : (allowed ? origin : allowedOrigins[0]),
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Max-Age': '86400',
       Vary: 'Origin',
@@ -53,7 +52,7 @@ export default {
     let upstream;
     try {
       upstream = await fetch(target, {
-        headers: { Accept: 'application/json', 'User-Agent': 'plane-radar-proxy (+https://github.com/wiktorkuziemko-dev/plane-radar)' },
+        headers: { Accept: 'application/json', 'User-Agent': 'plane-radar-proxy' },
       });
     } catch (e) {
       return json({ error: 'upstream unreachable' }, 502, cors);

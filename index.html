@@ -284,6 +284,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
         <b>Nie udało się pobrać danych</b>
         <pre id="errorDetails"></pre>
         <p id="errorHint" class="small"></p>
+        <button type="button" id="errorSettingsBtn" class="btn primary">Ustaw serwer pośredniczący</button>
         <p class="muted small">Aplikacja ponawia próbę co 5 s. Dane demo zobaczysz po dopisaniu <code>?demo</code> do adresu.</p>
       </div>
     </section>
@@ -317,7 +318,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
         </select>
       </label>
       <label>Serwer pośredniczący (Cloudflare Worker)
-        <input name="proxy" type="url" placeholder="https://plane-radar-proxy.…workers.dev" inputmode="url" autocomplete="off">
+        <input name="proxy" type="url" placeholder="https://nazwa-workera.konto.workers.dev" inputmode="url" autocomplete="off">
       </label>
       <p class="muted small">Ustawienia zostają tylko w tej przeglądarce. Do API wysyłany jest środek obszaru i promień.</p>
       <div class="actions">
@@ -337,9 +338,8 @@ const TRAIL_POINTS = 12;
 const STORAGE_KEY = 'plane-radar.settings';
 const DEMO = new URLSearchParams(location.search).has('demo');
 
-// CORS proxy (see worker/plane-radar-proxy.js). The public APIs refuse direct browser requests,
-// so the app talks to them through this Cloudflare Worker. Can be overridden in settings.
-const PROXY_URL = '';
+// The public APIs refuse direct browser requests (CORS), so the app talks to them through
+// a Cloudflare Worker (worker/plane-radar-proxy.js) whose address the user enters in settings.
 
 const DEFAULTS = { label: 'Warszawa (domyślnie)', lat: 52.2297, lon: 21.0122, radiusKm: 15, source: 'adsb.lol', proxy: '' };
 
@@ -349,7 +349,7 @@ const SOURCES = {
   'airplanes.live': 'https://api.airplanes.live',
 };
 
-const proxyBase = () => (state.settings.proxy || PROXY_URL).trim().replace(/\/+$/, '');
+const proxyBase = () => (state.settings.proxy || '').trim().replace(/\/+$/, '');
 
 function aircraftUrl(key, lat, lon, nm) {
   const path = `/v2/point/${lat}/${lon}/${nm}`;
@@ -388,6 +388,7 @@ const state = {
   selected: null,
   lastOk: 0,
   timer: null,
+  gen: 0,               // bumped on restart so responses from before a settings change are ignored
 };
 
 // ---------- Utils ----------
@@ -525,8 +526,10 @@ async function lookupRoute(callsign) {
 }
 
 async function tick() {
+  const gen = state.gen;
   try {
     const { list, source } = await fetchAircraft();
+    if (gen !== state.gen) return;
     state.all = list.map(normalize).filter(Boolean).sort((a, b) => a.distKm - b.distKm);
     applyRadius();
     updateTrails();
@@ -535,11 +538,12 @@ async function tick() {
     setStatus('live', DEMO ? 'Tryb demo' : `Na żywo · ${source}`);
     state.aircraft.forEach((a) => lookupRoute(a.callsign));
   } catch (e) {
+    if (gen !== state.gen) return;
     setStatus(state.lastOk ? 'warn' : 'err', state.lastOk ? 'Problem z połączeniem – ponawiam…' : 'Brak danych – szczegóły pod listą');
     $('#errorDetails').textContent = `${new Date().toLocaleTimeString('pl-PL')} · ${location.origin}\n${e.message}`;
     $('#errorHint').innerHTML = proxyBase()
       ? 'Sprawdź, czy adres serwera pośredniczącego w ustawieniach jest poprawny i czy Worker działa.'
-      : 'Te serwisy nie pozwalają na zapytania prosto z przeglądarki (CORS). Ustaw adres serwera pośredniczącego w ustawieniach ⚙️ – instrukcja w README repozytorium.';
+      : 'Te serwisy nie pozwalają na zapytania prosto z przeglądarki (CORS). Wpisz adres swojego serwera pośredniczącego (Cloudflare Worker) w ustawieniach – instrukcja w README repozytorium.';
     $('#errorBox').hidden = !!state.lastOk;
     console.warn('fetch failed', e);
   }
@@ -785,6 +789,7 @@ function bind() {
   $('#sheetBackdrop').addEventListener('click', closeSheet);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
   $('#settingsBtn').addEventListener('click', openSettings);
+  $('#errorSettingsBtn').addEventListener('click', () => { openSettings(); $('#settingsForm').proxy.focus(); });
 
   const f = $('#settingsForm');
   // Radius slider: redraw instantly from data we already have, refetch once the user stops dragging.
@@ -829,7 +834,7 @@ function bind() {
 }
 
 function stop() { clearInterval(state.timer); state.timer = null; }
-function restart() { stop(); tick(); state.timer = setInterval(tick, REFRESH_MS); }
+function restart() { stop(); state.gen++; tick(); state.timer = setInterval(tick, REFRESH_MS); }
 
 // ---------- Demo data (?demo) ----------
 

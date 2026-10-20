@@ -25,13 +25,15 @@ Dlatego aplikacja łączy się z nimi przez mały Cloudflare Worker: plik [`work
 Darmowy plan Cloudflare daje 100 000 zapytań dziennie. Aplikacja otwarta przez całą dobę zużywa około 17 000.
 
 1. Załóż darmowe konto na https://dash.cloudflare.com.
-2. **Workers & Pages → Create → Create Worker**. Nazwij go `plane-radar-proxy` i kliknij **Deploy**.
+2. **Workers & Pages → Create → Create Worker**. Nadaj mu dowolną nazwę i kliknij **Deploy**.
 3. **Edit code**: usuń przykładowy kod, wklej zawartość `worker/plane-radar-proxy.js` i kliknij **Deploy**.
-4. Skopiuj adres Workera, np. `https://plane-radar-proxy.<twoja-nazwa>.workers.dev`.
-5. W aplikacji otwórz ⚙️ Ustawienia, wklej adres w polu **Serwer pośredniczący** i zapisz.
-   Możesz też wpisać go na stałe w stałej `PROXY_URL` w `index.html`.
+4. Zalecane: w Workerze otwórz **Settings → Variables and Secrets → Add**. Dodaj zmienną tekstową `ALLOWED_ORIGINS`
+   z adresem Twojej strony, np. `https://<login>.github.io`, i zapisz (**Deploy**).
+   Wtedy z Workera może korzystać tylko Twoja strona. Kilka adresów oddziel przecinkami.
+5. W aplikacji otwórz ⚙️ Ustawienia, wklej adres Workera (`https://<nazwa>.<konto>.workers.dev`) w polu
+   **Serwer pośredniczący** i zapisz.
 
-Worker przyjmuje zapytania tylko ze stron wymienionych w `ALLOWED_ORIGINS`. Jeśli hostujesz aplikację gdzie indziej, dopisz tam jej adres.
+Adres Workera nie jest zapisany w kodzie. Zostaje tylko w przeglądarce, w której go wpiszesz, więc na każdym urządzeniu trzeba go podać raz.
 
 ## Uruchomienie lokalne
 ```bash
