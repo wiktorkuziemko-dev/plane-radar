@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Plane Radar">
+  <title>Plane Radar</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" class="brand-icon" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+      <div>
+        <h1>Plane Radar</h1>
+        <p id="place" class="muted">—</p>
+      </div>
+    </div>
+    <button id="settingsBtn" class="icon-btn" aria-label="Ustawienia">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zm7.4-2.5a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5z"/></svg>
+    </button>
+  </header>
+
+  <main class="layout">
+    <section class="radar-wrap">
+      <svg id="radar" viewBox="-110 -110 220 220" role="img" aria-label="Radar samolotów wokół domu"></svg>
+      <div class="status">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Łączenie…</span>
+      </div>
+    </section>
+
+    <section class="list-wrap">
+      <div class="list-head">
+        <h2><span id="count">0</span> w zasięgu</h2>
+        <span id="radiusLabel" class="muted"></span>
+      </div>
+      <ul id="list" class="cards"></ul>
+      <p id="empty" class="empty" hidden>Teraz nic nie leci nad Tobą. Spróbuj zwiększyć promień w ustawieniach.</p>
+    </section>
+  </main>
+
+  <div id="sheetBackdrop" class="backdrop" hidden></div>
+  <aside id="sheet" class="sheet" aria-hidden="true">
+    <div class="sheet-grip"></div>
+    <div id="sheetBody"></div>
+  </aside>
+
+  <dialog id="settings">
+    <form method="dialog" id="settingsForm">
+      <h2>Ustawienia</h2>
+      <label>Nazwa miejsca
+        <input name="label" placeholder="np. Dom" maxlength="40">
+      </label>
+      <div class="row">
+        <label>Szerokość
+          <input name="lat" type="number" step="any" min="-90" max="90" required inputmode="decimal">
+        </label>
+        <label>Długość
+          <input name="lon" type="number" step="any" min="-180" max="180" required inputmode="decimal">
+        </label>
+      </div>
+      <button type="button" id="geoBtn" class="btn ghost">📍 Użyj mojej lokalizacji</button>
+      <label><span>Promień: <b id="radiusOut"></b> km</span>
+        <input name="radiusKm" type="range" min="3" max="60" step="1">
+      </label>
+      <label>Źródło danych
+        <select name="source">
+          <option value="adsb.lol">adsb.lol</option>
+          <option value="airplanes.live">airplanes.live</option>
+        </select>
+      </label>
+      <p class="muted small">Lokalizacja zostaje tylko w tej przeglądarce. Do API wysyłany jest środek obszaru i promień.</p>
+      <div class="actions">
+        <button value="cancel" formnovalidate class="btn ghost">Anuluj</button>
+        <button value="save" class="btn primary">Zapisz</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
