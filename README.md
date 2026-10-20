@@ -1,6 +1,6 @@
 # ✈️ Plane Radar
 
-Mobilna aplikacja webowa (PWA), która na żywo pokazuje samoloty lecące nad Twoim domem:
+Mobilna aplikacja webowa w **jednym pliku `index.html`**, która na żywo pokazuje samoloty lecące nad Twoim domem:
 przewoźnika, numer lotu, trasę, wysokość, prędkość, prędkość pionową, typ samolotu i rejestrację.
 
 ## Funkcje
@@ -8,7 +8,7 @@ przewoźnika, numer lotu, trasę, wysokość, prędkość, prędkość pionową,
 - Karty lotów posortowane według odległości, szczegóły po dotknięciu
 - Lokalizacja z GPS lub wpisana ręcznie, regulowany promień (3–60 km)
 - Odświeżanie co 5 s, wstrzymywane, gdy aplikacja jest w tle
-- Można ją zainstalować na ekranie głównym telefonu („Dodaj do ekranu początkowego”)
+- Można ją dodać do ekranu głównego telefonu („Dodaj do ekranu początkowego”)
 
 ## Źródła danych (darmowe, bez klucza API)
 | Dane | Źródło |
@@ -31,7 +31,4 @@ Settings → Pages → Source: *Deploy from a branch* → `main` / `(root)`.
 Aplikacja będzie dostępna pod `https://<login>.github.io/plane-radar/`.
 
 ## Struktura
-- `index.html`: układ strony
-- `style.css`: wygląd (ciemny motyw, mobile-first)
-- `app.js`: pobieranie danych, radar, lista, ustawienia, tryb demo
-- `sw.js`, `manifest.webmanifest`, `icons/`: obsługa PWA
+Cała aplikacja (HTML, CSS, JavaScript i ikona) jest w `index.html`. Można go też otworzyć bezpośrednio z dysku albo wrzucić na dowolny hosting.
