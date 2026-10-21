@@ -6,7 +6,8 @@ przewoźnika, numer lotu, trasę, wysokość, prędkość, prędkość pionową,
 ## Funkcje
 - Radar z samolotami wokół domu: ikony obrócone zgodnie z kursem, kolor zależny od wysokości, krótki ślad przelotu
 - Karty lotów posortowane według odległości, szczegóły po dotknięciu
-- Lokalizacja z GPS lub wpisana ręcznie, regulowany promień (3–60 km)
+- Mapa OpenStreetMap pod radarem (Leaflet), dopasowana do promienia
+- Lokalizacja: wyszukiwanie miejsca (OpenStreetMap Nominatim), GPS albo współrzędne; regulowany promień (3–60 km)
 - Odświeżanie co 5 s, wstrzymywane, gdy aplikacja jest w tle
 - Można ją dodać do ekranu głównego telefonu („Dodaj do ekranu początkowego”)
 

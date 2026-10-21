@@ -10,6 +10,8 @@
   <title>Plane Radar</title>
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzBiMTIyMCIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI0MzE0ZCIgc3Ryb2tlLXdpZHRoPSIxMCI+CiAgICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjkwIi8+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSIxNjAiLz4KICA8L2c+CiAgPHBhdGggZD0iTTI1NiAyNTYgTDQyNiAyNTYgQTE3MCAxNzAgMCAwIDAgMzc2IDEzNiBaIiBmaWxsPSIjMzhkMzlmIiBvcGFjaXR5PSIuMjUiLz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNTYgMjU2KSByb3RhdGUoNDUpIHNjYWxlKDkpIiBmaWxsPSIjMzhkMzlmIj4KICAgIDxwYXRoIGQ9Ik0wLTEyIDEuNi04IDEuNi0zIDExIDMgMTEgNS41IDEuNiAzIDEuNiA4LjUgNC41IDExIDQuNSAxMi44IDAgMTEuNi00LjUgMTIuOC00LjUgMTEtMS42IDguNS0xLjYgMy0xMSA1LjUtMTEgMy0xLjYtMy0xLjYtOFoiLz4KICA8L2c+Cjwvc3ZnPg==" type="image/svg+xml">
   <link rel="apple-touch-icon" href="data:image/png;base64,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">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <style>
 :root {
   --bg: #0b1220;
@@ -119,10 +121,17 @@ input.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(56,
   border: 1px solid var(--line); border-radius: var(--radius);
   padding: 8px; position: relative;
 }
-#radar { width: 100%; aspect-ratio: 1; display: block; touch-action: manipulation; }
-#radar .ring { fill: none; stroke: var(--line); stroke-width: .6; }
-#radar .axis { stroke: var(--line); stroke-width: .4; stroke-dasharray: 2 2; }
-#radar .ring-label { fill: var(--muted); font-size: 5px; }
+.radar-stage { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; }
+#map { position: absolute; inset: 0; background: var(--bg); z-index: 0; }
+/* OpenStreetMap tiles recoloured to match the dark radar look */
+#map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.8) contrast(.9) saturate(.3); }
+#radar { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; touch-action: manipulation; }
+#radar .outside { fill: rgba(11, 18, 32, .6); }
+.map-credit { position: absolute; right: 14px; bottom: 12px; z-index: 2; font-size: 10.5px; color: var(--muted); }
+.map-credit a { color: inherit; }
+#radar .ring { fill: none; stroke: rgba(138, 155, 184, .35); stroke-width: .6; }
+#radar .axis { stroke: rgba(138, 155, 184, .25); stroke-width: .4; stroke-dasharray: 2 2; }
+#radar .ring-label { fill: var(--muted); font-size: 5px; paint-order: stroke; stroke: #0b1220; stroke-width: 1.2px; }
 #radar .compass { fill: var(--muted); font-size: 6px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
 #radar .home { fill: var(--accent); }
 #radar .home-pulse { fill: none; stroke: var(--accent); stroke-width: .8; animation: pulse 2.4s ease-out infinite; transform-origin: center; transform-box: fill-box; }
@@ -137,7 +146,7 @@ input.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(56,
 @keyframes pulse { from { transform: scale(.4); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
 
 .status {
-  position: absolute; left: 14px; bottom: 12px;
+  position: absolute; left: 14px; bottom: 12px; z-index: 2;
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; color: var(--muted);
 }
@@ -225,6 +234,18 @@ input, select {
   border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
 }
 input[type=range] { padding: 0; accent-color: var(--accent); }
+.search-row { display: flex; gap: 8px; }
+.search-row .btn { flex: none; }
+.results { list-style: none; margin: -6px 0 0; padding: 0; display: grid; gap: 4px; max-height: 220px; overflow-y: auto; }
+.results button {
+  width: 100%; text-align: left; font: inherit; font-size: 13.5px; color: var(--text); cursor: pointer;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
+}
+.results button:hover, .results button:focus-visible { border-color: var(--accent); outline: none; }
+.results .muted { display: block; font-size: 12px; }
+.form-msg { margin: -6px 0 0; font-size: 12.5px; color: var(--muted); }
+.form-msg.err { color: var(--err); }
+.form-msg.ok { color: var(--accent); }
 dialog label.check { display: flex; align-items: center; gap: 10px; color: var(--text); font-size: 14px; cursor: pointer; }
 dialog label.check input { width: 20px; height: 20px; flex: none; padding: 0; accent-color: var(--accent); }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
@@ -255,7 +276,11 @@ dialog label.check input { width: 20px; height: 20px; flex: none; padding: 0; ac
   <main class="layout">
     <div class="side">
       <section class="radar-wrap">
-        <svg id="radar" viewBox="-110 -110 220 220" role="img" aria-label="Radar samolotów wokół domu"></svg>
+        <div class="radar-stage">
+          <div id="map" aria-hidden="true"></div>
+          <svg id="radar" viewBox="-110 -110 220 220" role="img" aria-label="Radar samolotów wokół domu"></svg>
+        </div>
+        <div class="map-credit" id="mapCredit" hidden>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
         <div class="status">
           <span id="statusDot" class="dot"></span>
           <span id="statusText">Łączenie…</span>
@@ -310,18 +335,26 @@ dialog label.check input { width: 20px; height: 20px; flex: none; padding: 0; ac
   <dialog id="settings">
     <form method="dialog" id="settingsForm">
       <h2>Ustawienia</h2>
-      <label>Nazwa miejsca
-        <input name="label" placeholder="np. Dom" maxlength="40">
+      <label>Szukaj miejsca
+        <div class="search-row">
+          <input name="query" type="search" placeholder="np. Kraków albo ulica i miasto" enterkeyhint="search" autocomplete="off">
+          <button type="button" id="searchBtn" class="btn">Szukaj</button>
+        </div>
       </label>
+      <p id="locMsg" class="form-msg" hidden></p>
+      <ul id="searchResults" class="results" hidden></ul>
+      <button type="button" id="geoBtn" class="btn ghost">📍 Użyj mojej lokalizacji</button>
       <div class="row">
         <label>Szerokość
-          <input name="lat" type="number" step="any" min="-90" max="90" required inputmode="decimal">
+          <input name="lat" type="text" inputmode="decimal" autocomplete="off" placeholder="np. 50,0647">
         </label>
         <label>Długość
-          <input name="lon" type="number" step="any" min="-180" max="180" required inputmode="decimal">
+          <input name="lon" type="text" inputmode="decimal" autocomplete="off" placeholder="np. 19,9450">
         </label>
       </div>
-      <button type="button" id="geoBtn" class="btn ghost">📍 Użyj mojej lokalizacji</button>
+      <label>Nazwa miejsca (wyświetlana w nagłówku)
+        <input name="label" placeholder="np. Dom" maxlength="40">
+      </label>
       <label>Źródło danych
         <select name="source">
           <option value="adsb.lol">adsb.lol</option>
@@ -344,6 +377,8 @@ dialog label.check input { width: 20px; height: 20px; flex: none; padding: 0; ac
     </form>
   </dialog>
 
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script>
 'use strict';
 
@@ -665,7 +700,37 @@ function routeHtml(route) {
 
 // ---------- Render ----------
 
-let radarRadius = null;
+// ---------- Map (OpenStreetMap via Leaflet) ----------
+// The map sits under the SVG radar and is locked to it: zoom is chosen so that the radius
+// equals 100 SVG units (viewBox is 220 units wide). Panning/zooming is driven by settings.
+let map = null;
+
+function initMap() {
+  if (!window.L) return; // CDN unavailable: the radar still works without a map
+  map = L.map('map', {
+    zoomControl: false, attributionControl: false, dragging: false, touchZoom: false, scrollWheelZoom: false,
+    doubleClickZoom: false, boxZoom: false, keyboard: false, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false,
+  });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  $('#mapCredit').hidden = false;
+  new ResizeObserver(syncMap).observe($('#map'));
+  syncMap();
+}
+
+function syncMap() {
+  if (!map) return;
+  const { lat, lon, radiusKm } = state.settings;
+  const widthPx = $('#map').clientWidth;
+  if (!widthPx) return;
+  map.invalidateSize(false);
+  const metersPerPx = (radiusKm * 1000) / (100 * widthPx / 220);
+  const zoom = Math.log2((40075016.686 * Math.cos(lat * Math.PI / 180)) / (256 * metersPerPx));
+  map.setView([lat, lon], zoom, { animate: false });
+}
+
+let radarKey = null;
+
+const baseKey = () => `${state.settings.lat},${state.settings.lon},${state.settings.radiusKm}`;
 
 function renderRadarBase() {
   const R = state.settings.radiusKm;
@@ -680,6 +745,7 @@ function renderRadarBase() {
         <stop offset="0" stop-color="#38d39f" stop-opacity="0"/><stop offset="1" stop-color="#38d39f" stop-opacity=".18"/>
       </linearGradient>
     </defs>
+    <path class="outside" fill-rule="evenodd" d="M-110-110H110V110H-110Z M100 0A100 100 0 1 0-100 0A100 100 0 1 0 100 0Z"/>
     <path class="sweep" d="M0 0 L100 0 A100 100 0 0 0 70.7 -70.7 Z"/>
     ${rings}
     <line class="axis" x1="-100" y1="0" x2="100" y2="0"/><line class="axis" x1="0" y1="-100" x2="0" y2="100"/>
@@ -689,11 +755,12 @@ function renderRadarBase() {
     <circle class="home-pulse" r="4"/>
     <path class="home" d="M0-4.5 4.5-.5H3V4H-3V-.5H-4.5Z"/>
     <g id="planes"></g>`;
-  radarRadius = R;
+  radarKey = baseKey();
+  syncMap();
 }
 
 function renderRadar() {
-  if (radarRadius !== state.settings.radiusKm) renderRadarBase();
+  if (radarKey !== baseKey()) renderRadarBase();
   const k = 100 / state.settings.radiusKm;
   $('#planes').innerHTML = state.aircraft.map((a) => {
     const px = a.x * k, py = -a.y * k;
@@ -823,15 +890,87 @@ function closeSheet() {
   document.querySelectorAll('.card.selected').forEach((c) => c.classList.remove('selected'));
 }
 
+// Accepts "50,0647" and "50.0647"; returns NaN for anything else.
+function parseCoord(text) {
+  const t = String(text).trim().replace(',', '.');
+  return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : NaN;
+}
+
+function setLocMsg(text, kind = '') {
+  const el = $('#locMsg');
+  el.textContent = text;
+  el.className = `form-msg ${kind}`;
+  el.hidden = !text;
+}
+
+function setLocation(lat, lon, label) {
+  const f = $('#settingsForm');
+  f.lat.value = lat.toFixed(5).replace('.', ',');
+  f.lon.value = lon.toFixed(5).replace('.', ',');
+  if (label) f.label.value = label;
+}
+
+// OpenStreetMap geocoder. Its usage policy allows searches on explicit user action only (no search-as-you-type).
+async function searchPlace() {
+  const f = $('#settingsForm');
+  const q = f.query.value.trim();
+  const list = $('#searchResults');
+  if (!q) return;
+  setLocMsg('Szukam…');
+  list.hidden = true;
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=pl&q=${encodeURIComponent(q)}`;
+    const results = await fetchJSON(url, 10000);
+    if (!results.length) return setLocMsg('Nic nie znaleziono. Spróbuj innej nazwy.', 'err');
+    setLocMsg('Wybierz miejsce:');
+    list.innerHTML = results.map((r, i) => `<li><button type="button" data-i="${i}">${esc(r.name || r.display_name.split(',')[0])}
+      <span class="muted">${esc(r.display_name)}</span></button></li>`).join('');
+    list.hidden = false;
+    list.onclick = (e) => {
+      const btn = e.target.closest('button[data-i]');
+      if (!btn) return;
+      const r = results[+btn.dataset.i];
+      setLocation(parseFloat(r.lat), parseFloat(r.lon), r.name || r.display_name.split(',')[0]);
+      list.hidden = true;
+      setLocMsg(`Ustawiono: ${r.display_name}`, 'ok');
+    };
+  } catch (e) {
+    setLocMsg(`Wyszukiwanie nie działa (${describeError(e)}). Wpisz współrzędne ręcznie.`, 'err');
+  }
+}
+
+function useMyLocation() {
+  if (!window.isSecureContext) return setLocMsg('Lokalizacja działa tylko na stronie otwartej przez https://.', 'err');
+  if (!navigator.geolocation) return setLocMsg('Ta przeglądarka nie udostępnia lokalizacji. Wyszukaj miejsce powyżej.', 'err');
+  setLocMsg('Ustalanie lokalizacji…');
+  navigator.geolocation.getCurrentPosition(
+    (p) => {
+      const f = $('#settingsForm');
+      setLocation(p.coords.latitude, p.coords.longitude, (!f.label.value || f.label.value === DEFAULTS.label) ? 'Mój dom' : null);
+      setLocMsg(`Ustawiono bieżącą lokalizację (dokładność ok. ${fmt(Math.max(p.coords.accuracy, 1))} m).`, 'ok');
+    },
+    (err) => setLocMsg({
+      1: 'Przeglądarka nie ma zgody na lokalizację. Kliknij ikonę obok adresu strony, zezwól na lokalizację i spróbuj ponownie.',
+      2: 'Urządzenie nie zna swojej lokalizacji. Na komputerze włącz usługi lokalizacji w systemie (Windows: Ustawienia → Prywatność → Lokalizacja) albo wyszukaj miejsce powyżej.',
+      3: 'Ustalanie lokalizacji trwało za długo. Spróbuj ponownie albo wyszukaj miejsce powyżej.',
+    }[err.code] || 'Nie udało się ustalić lokalizacji.', 'err'),
+    // Desktops have no GPS; low accuracy (Wi-Fi / IP based) answers faster and is plenty for a radar.
+    { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60 * 1000 },
+  );
+}
+
 function openSettings() {
   const f = $('#settingsForm');
   const s = state.settings;
   f.label.value = s.label || '';
-  f.lat.value = s.lat;
-  f.lon.value = s.lon;
+  f.lat.value = String(s.lat).replace('.', ',');
+  f.lon.value = String(s.lon).replace('.', ',');
   f.source.value = s.source;
   f.proxy.value = s.proxy || '';
   f.showGround.checked = !!s.showGround;
+  f.query.value = '';
+  $('#searchResults').hidden = true;
+  setLocMsg('');
   $('#settings').showModal();
 }
 
@@ -856,32 +995,39 @@ function bind() {
     clearTimeout(radiusTimer);
     radiusTimer = setTimeout(() => { saveSettings(stripSaved(state.settings)); restart(); }, 450);
   });
-  $('#geoBtn').addEventListener('click', () => {
-    if (!navigator.geolocation) return alert('Ta przeglądarka nie udostępnia lokalizacji.');
-    $('#geoBtn').textContent = 'Ustalanie lokalizacji…';
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        f.lat.value = p.coords.latitude.toFixed(5);
-        f.lon.value = p.coords.longitude.toFixed(5);
-        if (!f.label.value || f.label.value === DEFAULTS.label) f.label.value = 'Mój dom';
-        $('#geoBtn').textContent = '📍 Lokalizacja ustawiona';
-      },
-      () => { $('#geoBtn').textContent = '📍 Nie udało się – wpisz ręcznie'; },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+  $('#geoBtn').addEventListener('click', useMyLocation);
+  $('#searchBtn').addEventListener('click', searchPlace);
+  f.query.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); searchPlace(); } });
+  // Pasting "50.0647, 19.9450" (e.g. from Google Maps) into the latitude field fills both fields.
+  f.lat.addEventListener('paste', (e) => {
+    const m = /^\s*(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*$/.exec(e.clipboardData.getData('text'));
+    if (!m) return;
+    e.preventDefault();
+    setLocation(parseFloat(m[1]), parseFloat(m[2]));
+  });
+  f.addEventListener('submit', (e) => {
+    if (e.submitter?.value !== 'save') return;
+    const lat = parseCoord(f.lat.value), lon = parseCoord(f.lon.value);
+    if (!(Math.abs(lat) <= 90) || !(Math.abs(lon) <= 180)) {
+      e.preventDefault();
+      setLocMsg('Niepoprawne współrzędne. Wyszukaj miejsce albo wpisz np. 50,0647 i 19,9450.', 'err');
+    }
   });
   $('#settings').addEventListener('close', () => {
     if ($('#settings').returnValue !== 'save') return;
     saveSettings({
       label: f.label.value.trim(),
-      lat: parseFloat(f.lat.value),
-      lon: parseFloat(f.lon.value),
+      lat: parseCoord(f.lat.value),
+      lon: parseCoord(f.lon.value),
       radiusKm: state.settings.radiusKm,
       source: f.source.value,
       proxy: f.proxy.value.trim(),
       showGround: f.showGround.checked,
     });
     state.trails.clear();
+    state.all = [];
+    applyRadius();
+    render(); // show the new place right away, before the first fetch for it returns
     restart();
   });
 
@@ -934,6 +1080,7 @@ function demoAircraft() {
 // ---------- Boot ----------
 
 bind();
+initMap();
 restart();
 if (!state.settings.saved && !DEMO) openSettings();
   </script>
