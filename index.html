@@ -133,7 +133,7 @@ input.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(56,
 #radar .axis { stroke: rgba(138, 155, 184, .25); stroke-width: .4; stroke-dasharray: 2 2; }
 #radar .ring-label { fill: var(--muted); font-size: 5px; paint-order: stroke; stroke: #0b1220; stroke-width: 1.2px; }
 #radar .compass { fill: var(--muted); font-size: 6px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
-#radar .home { fill: var(--accent); }
+#radar .home { fill: var(--accent); stroke: #0b1220; stroke-width: .5; paint-order: stroke; }
 #radar .home-pulse { fill: none; stroke: var(--accent); stroke-width: .8; animation: pulse 2.4s ease-out infinite; transform-origin: center; transform-box: fill-box; }
 #radar .sweep { fill: url(#sweepGrad); animation: spin 6s linear infinite; transform-origin: 0 0; }
 #radar .plane { cursor: pointer; }
@@ -753,7 +753,7 @@ function renderRadarBase() {
     <text class="compass" x="0" y="106">S</text><text class="compass" x="-105" y="0">W</text>
     <circle r="14" fill="url(#glow)"/>
     <circle class="home-pulse" r="4"/>
-    <path class="home" d="M0-4.5 4.5-.5H3V4H-3V-.5H-4.5Z"/>
+    <g class="home"><circle cy="-2.6" r="1.7"/><path d="M-3.2 4.3C-3.2 1.6-1.8.3 0 .3S3.2 1.6 3.2 4.3Z"/></g>
     <g id="planes"></g>`;
   radarKey = baseKey();
   syncMap();
